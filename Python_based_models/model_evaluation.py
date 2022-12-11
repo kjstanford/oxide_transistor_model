@@ -26,7 +26,7 @@ T = 300
 phiM = 5.2
 
 params = dict(L=L, W=W, mu_band=mu_band, Ntraps=Ntraps, Ttraps=Ttraps, Nch=Nch, T=T, tITO=4.5e-9,\
-    tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3)
+    tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3, Rs=10, Rd=10)
 
 Cox = epso*params['kDE']/params['tDE'];
 
@@ -70,35 +70,35 @@ logx_plot(x=ax_Id, y=ax_SS, c=['r','b','r','b'], s=['solid','solid','dashdot','d
      xlim=(1e-11, 1e-6), ylim=(50,150), labels=['Exp', 'Model'], fnames=['SS_e.csv','SS_m.csv'])
 
 
-mu_band = 33.5*1e-4; #band mobility in m^2/V.s
-Ttraps = [400, 800, 1200]
-# Ttraps = 400;
-# Ntraps = [1.5e16, 5.5e16, 9.5e16];
-Ntraps = 5.5e16;
-Nch = 1e17;
-Vds = 0.1;
-params = dict(L=L, W=W, mu_band=mu_band, Ntraps=Ntraps, Nch=Nch, T=T, tITO=4.5e-9,\
-    tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3)
-pars = [params|{'Ttraps':elem} for elem in Ttraps];
+# mu_band = 33.5*1e-4; #band mobility in m^2/V.s
+# Ttraps = [400, 800, 1200]
+# # Ttraps = 400;
+# # Ntraps = [1.5e16, 5.5e16, 9.5e16];
+# Ntraps = 5.5e16;
+# Nch = 1e17;
+# Vds = 0.1;
+# params = dict(L=L, W=W, mu_band=mu_band, Ntraps=Ntraps, Nch=Nch, T=T, tITO=4.5e-9,\
+#     tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3)
+# pars = [params|{'Ttraps':elem} for elem in Ttraps];
 
-ax_Vg, ax_Id, ax_mu, ax_SS, ax_phi = [], [], [], [], []
-ax_Vg = [ax_Vg_exp[0] for elem in Ttraps]
-ax_Id = [np.array([model(params=par,inputs=dict(Vgs=Vg,Vds=Vds))[1] for Vg in Vg_arr]) \
-         for Vg_arr, par in zip(ax_Vg, pars)]
-ax_mu = [1e4*(np.gradient(Id_arr)/np.gradient(Vg_arr))/(Cox*(W/L)*Vds)\
-         for Vg_arr, Id_arr in zip(ax_Vg, ax_Id)]
-ax_SS = [(np.gradient(Vg_arr)*1e3)/np.gradient(log10(Id_arr))\
-         for Vg_arr, Id_arr in zip(ax_Vg, ax_Id)]
+# ax_Vg, ax_Id, ax_mu, ax_SS, ax_phi = [], [], [], [], []
+# ax_Vg = [ax_Vg_exp[0] for elem in Ttraps]
+# ax_Id = [np.array([model(params=par,inputs=dict(Vgs=Vg,Vds=Vds))[1] for Vg in Vg_arr]) \
+#          for Vg_arr, par in zip(ax_Vg, pars)]
+# ax_mu = [1e4*(np.gradient(Id_arr)/np.gradient(Vg_arr))/(Cox*(W/L)*Vds)\
+#          for Vg_arr, Id_arr in zip(ax_Vg, ax_Id)]
+# ax_SS = [(np.gradient(Vg_arr)*1e3)/np.gradient(log10(Id_arr))\
+#          for Vg_arr, Id_arr in zip(ax_Vg, ax_Id)]
 
 
-lin_plot(x=ax_Vg, y=ax_Id, c=['r','b','r','b'], s=['solid','solid','dashdot','dashdot'],\
-     ylim=(1e-12, ax_Id[1][-1]*1.25), labels=[str(elem) for elem in Ttraps],\
-           fnames=['lin_1.csv','lin_2.csv','lin_3.csv'])    
-logy_plot(x=ax_Vg, y=ax_Id, c=['r','b','r','b'], s=['solid','solid','dashdot','dashdot'],\
-     ylim=(1e-12, ax_Id[1][-1]*1.25), labels=[str(elem) for elem in Ttraps],\
-           fnames=['log_1.csv','log_2.csv','log_3.csv'])    
-lin_plot(x=ax_Vg, y=ax_mu, c=['r','b','r','b'], s=['solid','solid','dashdot','dashdot'],\
-     labels=[str(elem) for elem in Ttraps], fnames=['mu_1.csv','mu_2.csv','mu_3.csv'])    
-logx_plot(x=ax_Id, y=ax_SS, c=['r','b','r','b'], s=['solid','solid','dashdot','dashdot'],\
-     xlim=(1e-11, 1e-6), ylim=(50,150), labels=[str(elem) for elem in Ttraps],\
-           fnames=['SS_1.csv','SS_2.csv','SS_3.csv'])
+# lin_plot(x=ax_Vg, y=ax_Id, c=['r','b','r','b'], s=['solid','solid','dashdot','dashdot'],\
+#      ylim=(1e-12, ax_Id[1][-1]*1.25), labels=[str(elem) for elem in Ttraps],\
+#            fnames=['lin_1.csv','lin_2.csv','lin_3.csv'])    
+# logy_plot(x=ax_Vg, y=ax_Id, c=['r','b','r','b'], s=['solid','solid','dashdot','dashdot'],\
+#      ylim=(1e-12, ax_Id[1][-1]*1.25), labels=[str(elem) for elem in Ttraps],\
+#            fnames=['log_1.csv','log_2.csv','log_3.csv'])    
+# lin_plot(x=ax_Vg, y=ax_mu, c=['r','b','r','b'], s=['solid','solid','dashdot','dashdot'],\
+#      labels=[str(elem) for elem in Ttraps], fnames=['mu_1.csv','mu_2.csv','mu_3.csv'])    
+# logx_plot(x=ax_Id, y=ax_SS, c=['r','b','r','b'], s=['solid','solid','dashdot','dashdot'],\
+#      xlim=(1e-11, 1e-6), ylim=(50,150), labels=[str(elem) for elem in Ttraps],\
+#            fnames=['SS_1.csv','SS_2.csv','SS_3.csv'])
