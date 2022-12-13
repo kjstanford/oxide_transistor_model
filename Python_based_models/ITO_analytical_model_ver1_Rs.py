@@ -34,6 +34,8 @@ def ITO_analytical_model(inputs, params):
     W = params['W']
     Rs = params['Rs']
     Rd = params['Rd']
+    Ndeep = params['Ndeep']
+    Tdeep = params['Tdeep']
 
     # inputs
     Vgs = inputs['Vgs']
@@ -42,8 +44,10 @@ def ITO_analytical_model(inputs, params):
     Cox = epso*kDE/tDE
     g2D = (me*q)/(pi*hred**2)
     Etraps = kB*Ttraps
+    Edeep = kB*Tdeep
     En = lambda n: (hred*pi*n)**2/(2*q*me*tITO**2);
     gtraps = lambda E: (Ntraps/Etraps)*exp((E-En(1))/Etraps)*(E<En(1))
+    gdeep = lambda E: (Ndeep/Edeep)*exp((E-En(1))/Edeep)*(E<En(1))
     gfree = lambda E: g2D*((E>=En(1))+(E>=En(2))+(E>=En(3)))
 
     n2D = lambda delE: g2D*kB*T*log(1+exp(-(delE)/(kB*T)))
@@ -57,11 +61,17 @@ def ITO_analytical_model(inputs, params):
     ntraps = lambda Ef,phi: prefac(Ef,phi)*(xnplus1(alphac(Ef,phi),Ttraps/T)-xnplus1(0,Ttraps/T))
     ntraps_approx = lambda Ef,phi: prefac(Ef,phi)*(pi*(T/Ttraps)/sin(pi*(T/Ttraps)))
 
-    Efermi = fsolve(lambda Ef: (nfree(Ef,0)+ntraps(Ef,0)-Nch)/Nch, 0)
+    d_xnplus1 = lambda x,n: x*hyp2f1(1,1/n,1+1/n,-(x**n))
+    d_alphac = lambda Ef,phi: exp((En(1)-phi-Ef)/(kB*Tdeep))
+    d_prefac = lambda Ef,phi: (Ndeep)*((d_alphac(Ef,phi))**(-1))
+    ndeep = lambda Ef,phi: d_prefac(Ef,phi)*(d_xnplus1(d_alphac(Ef,phi),Tdeep/T)-d_xnplus1(0,Tdeep/T))
+
+    Efermi = fsolve(lambda Ef: (nfree(Ef,0)+ntraps(Ef,0)+ndeep(Ef,0)-Nch)/Nch, 0)
     phiMS = phiM - (chiS-Efermi)
 
     def IdVg(Vg, Vds):
-        phi_fn = lambda V: fsolve(lambda phi: Cox*(Vg-phiMS-phi) - q*(nfree(Efermi,phi-V)+ntraps(Efermi,phi-V)-Nch), 0);
+        phi_fn = lambda V: fsolve(lambda phi: Cox*(Vg-phiMS-phi)\
+             - q*(nfree(Efermi,phi-V)+ntraps(Efermi,phi-V)+ndeep(Efermi,phi-V)-Nch), 0);
         Id_TFT = lambda Vs,Vd: integrate.quad(lambda V: (W/L)*q*mu_band*nfree(Efermi,phi_fn(V)-V),Vs,Vds-Vd);
         func = lambda VV: [Id_TFT(VV[0], VV[1])[0]-VV[0]/Rs,\
                            VV[0]/Rs-VV[1]/Rd];
@@ -74,6 +84,6 @@ def ITO_analytical_model(inputs, params):
 
 
 params = dict(L=1, W=1, mu_band=33.5*1e-4, Ntraps=5.5e16, Ttraps=400, Nch=1e17, T=300, tITO=4.5e-9, tDE=5.3e-9,\
-    me_factor=0.3, kDE=16, kITO=9, phiM=5.2, chiS=4.3, Rs=10, Rd=10)
+    me_factor=0.3, kDE=16, kITO=9, phiM=5.2, chiS=4.3, Rs=10, Rd=10, Ndeep=5.5e16, Tdeep = 1000)
 inputs = dict(Vgs=1, Vds=0.1)
 # print(ITO_analytical_model(inputs=inputs, params=params)) 
