@@ -26,7 +26,7 @@ T = 300
 phiM = 5.2
 
 params = dict(L=L, W=W, mu_band=mu_band, Ntraps=Ntraps, Ttraps=Ttraps, Nch=Nch, T=T, tITO=4.5e-9,\
-    tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3, Rs=1, Rd=1, Ndeep=Ntraps, Tdeep=50*Ntraps)
+    tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3, Rs=1, Rd=1, Ndeep=Ntraps, Tdeep=50*Ttraps)
 
 Cox = epso*params['kDE']/params['tDE'];
 
