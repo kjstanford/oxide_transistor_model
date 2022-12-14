@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from ITO_analytical_model_ver1_Rs import ITO_analytical_model as model
+from ITO_analytical_model_ver1 import ITO_analytical_model as model
 from plotter import lin_plot, logx_plot, logy_plot
 from numpy import pi, log, log10, exp
 
@@ -25,8 +25,8 @@ Nch = 1e17
 T = 300
 phiM = 5.2
 
-params = dict(L=L, W=W, mu_band=mu_band, Ntraps=Ntraps, Ttraps=Ttraps, Nch=Nch, T=T, tITO=4.5e-9,\
-    tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3, Rs=1, Rd=1, Ndeep=Ntraps, Tdeep=50*Ttraps)
+params = dict(L=L, W=W, mu_band=mu_band, Ntraps=Ntraps/2, Ttraps=Ttraps, Nch=Nch, T=T, tITO=4.5e-9,\
+    tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3, Rs=1, Rd=1, Ndeep=Ntraps/2, Tdeep=50*Ttraps)
 
 Cox = epso*params['kDE']/params['tDE'];
 
