@@ -18,15 +18,16 @@ epso = 8.85e-12
 #important parameters
 L = 1
 W = 100
-mu_band = 33.5*1e-4 #band mobility in m^2/V.s
-Ttraps = 400
-Ntraps = 5.5e16
-Nch = 1e17
+mu_band = 32.5*1e-4 #band mobility in m^2/V.s
+Ttraps = 500
+Ntraps = 8e16
+Nch = 1.3e17
 T = 300
 phiM = 5.2
 
-params = dict(L=L, W=W, mu_band=mu_band, Ntraps=Ntraps/2, Ttraps=Ttraps, Nch=Nch, T=T, tITO=4.5e-9,\
-    tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3, Rs=1, Rd=1, Ndeep=Ntraps/2, Tdeep=50*Ttraps)
+frac = 0.55
+params = dict(L=L, W=W, mu_band=mu_band, Ntraps=Ntraps*frac, Ttraps=Ttraps, Nch=Nch, T=T, tITO=4.5e-9,\
+    tDE=5.3e-9, me_factor=0.3, kDE=16, kITO=9, phiM=phiM, chiS=4.3, Rs=1, Rd=1, Ndeep=Ntraps*(1-frac), Tdeep=50*Ttraps)
 
 Cox = epso*params['kDE']/params['tDE'];
 
