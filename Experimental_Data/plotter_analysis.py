@@ -85,20 +85,21 @@ pd_data_set = [pd.DataFrame(X[1:], columns=X[0]) for X in data_set]
 
 sweep_type = 1 
 df = pd_data_set[:]
-Id_data = [np.array(ds.loc[:sweep_type*int(N/2),' absId']) for ds in df]
-Vg_data = [np.array(ds.loc[:sweep_type*int(N/2),' Vg']) for ds in df]
-Vd_data = [np.array(ds.loc[:sweep_type*int(N/2),' Vd']) for ds in df]
+Id_data = [np.array(ds.loc[:sweep_type*int(N/2)-1,' absId']) for ds in df]
+Vg_data = [np.array(ds.loc[:sweep_type*int(N/2)-1,' Vg']) for ds in df]
+Vd_data = [np.array(ds.loc[:sweep_type*int(N/2)-1,' Vd']) for ds in df]
 
 epso = 8.85e-12
 Vg_min = -2
 L=1.5; W =20; 
 kDE=16; tDE=5.3e-9; Cox = epso*kDE/tDE;
 
-ax_Vg_exp = [d_Vg[d_Vg > Vg_min] for d_Vg in Vg_data]
-ax_Id_exp = [d_Id[d_Vg > Vg_min] for d_Vg, d_Id in zip(Vg_data, Id_data)]
-ax_Vd_exp = [d_Vd[d_Vg > Vg_min] for d_Vg, d_Vd in zip(Vg_data, Vd_data)]
-ax_mu_exp = [1e4*(np.gradient(d_Id)/np.gradient(d_Vg))/(Cox*(W/L)*d_Vd[0])\
-     for d_Vg, d_Vd, d_Id in zip(ax_Vg_exp, ax_Vd_exp, ax_Id_exp)]
+ax_Vg_exp = [d_Vg[d_Vg >= Vg_min] for d_Vg in Vg_data]
+ax_Id_exp = [d_Id[d_Vg >= Vg_min] for d_Vg, d_Id in zip(Vg_data, Id_data)]
+ax_Vd_exp = [d_Vd[d_Vg >= Vg_min] for d_Vg, d_Vd in zip(Vg_data, Vd_data)]
+ax_mu_exp = \
+        [1e4*(np.gradient(d_Id[d_Vg >= Vg_min])/np.gradient(d_Vg[d_Vg >= Vg_min]))/(Cox*(W/L)*d_Vd[d_Vg >= Vg_min][0])\
+        for d_Vg, d_Vd, d_Id in zip(Vg_data, Vd_data, Id_data)]
 
 
 
