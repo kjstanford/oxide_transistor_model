@@ -1,5 +1,5 @@
 ## Date:22ndNov 2022, Author: Koustav Jana ##
-""" Code Description """ 
+""" Code Description: Dual Exponential Trap Distribution with Contact Resistances """ 
 import numpy as np
 import scipy.linalg as la
 import scipy.integrate as integrate
