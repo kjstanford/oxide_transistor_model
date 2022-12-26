@@ -41,7 +41,7 @@ double hyp21_series( double a, double b, double c, double x )
     while ( abs( term ) > TOLERANCE )
     {
         a++, b++, c++, n++;
-        term *= a * b * x / c / n;
+        term *= a * b * x / (c * n);
         value += term;
     }
 
