@@ -1,0 +1,293 @@
+`include "discipline.h"
+`include "constants.h"
+
+module ITO_TFT_compact_v3(d, g, s);
+    inout d, g, s;
+    electrical d, g, s, di, si;
+   
+
+    // constants
+    parameter real kB = 8.617e-5; //eV/K
+    parameter real q = 1.6e-19; //C
+    parameter real mo = 9.11e-31; //kg
+    parameter real hred = 1.054571817e-34;
+    parameter real epso = 8.85e-12;
+    parameter real pi = 3.141592653589793238;
+    parameter real h = hred*2*pi;
+
+    // parameters
+    parameter real mu_band = 33.5*1e-4;
+    parameter real Ntraps = 5.5e16;
+    parameter real Ttraps = 400;
+    parameter real Ndeep = 5.5e16;
+    parameter real Tdeep = 1000;
+    parameter real Nch = 1.0e17;
+    parameter real T = 300;
+    parameter real tITO = 4.5e-9;
+    parameter real tDE = 5.3e-9;
+    parameter real me = 0.3*mo;
+    parameter real kDE = 16;
+    parameter real kITO = 9;
+    parameter real phiM = 5.2;
+    parameter real chiS = 4.3;
+    parameter real L = 1;
+    parameter real W = 1;
+    parameter real Rs = 1;
+    parameter real Rd = 1;
+
+    // other values
+    parameter real Cox = epso*kDE/tDE;
+    parameter real g2D = (me*q)/(pi*pow(hred,2));
+    parameter real Etraps = kB*Ttraps;
+    parameter real Edeep = kB*Tdeep;
+    parameter real ET = kB*T;
+    parameter real E1 = pow(hred*pi,2)/(2*q*me*pow(tITO,2));
+    parameter real E2 = pow(hred*pi*2,2)/(2*q*me*pow(tITO,2));
+    parameter real E3 = pow(hred*pi*3,2)/(2*q*me*pow(tITO,2));
+
+    analog function real sgamma;
+        input x;
+        real x, y, sm;
+        real ra[1:30];
+        integer i;
+        begin
+            ra[1] = 1.00000000000000000000; ra[2] = 0.57721566490153286061; ra[3] = -0.65587807152025388108;
+            ra[4] = -0.04200263503409523553; ra[5] = 0.16653861138229148950; ra[6] = -0.04219773455554433675;
+            ra[7] = -0.00962197152787697356; ra[8] = 0.00721894324666309954; ra[9] = -0.00116516759185906511;
+            ra[10] = -0.00021524167411495097; ra[11] = 0.00012805028238811619; ra[12] = -0.00002013485478078824;
+            ra[13] = -0.00000125049348214267; ra[14] = 0.00000113302723198170; ra[15] = -0.00000020563384169776;
+            ra[16] = 0.00000000611609510448; ra[17] = 0.00000000500200764447; ra[18] = -0.00000000118127457049;
+            ra[19] = 0.00000000010434267117; ra[20] = 0.00000000000778226344; ra[21] = -0.00000000000369680562;
+            ra[22] = 0.00000000000051003703; ra[23] = -0.00000000000002058326; ra[24] = -0.00000000000000534812;
+            ra[25] = 0.00000000000000122678; ra[26] = -0.00000000000000011813; ra[27] = 0.00000000000000000119;
+            ra[28] = 0.00000000000000000141; ra[29] = -0.00000000000000000023; ra[30] = 0.00000000000000000002;
+            
+            i = 29;
+            y = x - 1.0;
+            sm = ra[30];
+            for (i = 29; i >= 1; i = i-1) begin
+                sm = sm * y + ra[i];
+            end
+            sgamma = 1.0 / sm;
+        end
+    endfunction
+
+    analog function real hyp21_series;
+        input aa, bb, cc, x;
+        real a, b, c, aa, bb, cc, x, TOLERANCE, term, value;
+        integer n;
+        begin
+            a = aa;
+            b = bb;
+            c = cc;
+            TOLERANCE = 1e-10;
+            term = a * b * x / c;
+            value = 1.0 + term;
+            n = 1;
+            while ( abs( term ) > TOLERANCE ) begin
+                a = a + 1;
+                b = b + 1;
+                c = c + 1;
+                n = n + 1; 
+                term = term * a * b * x / (c * n);
+                value = value + term;
+            end
+            hyp21_series = value;
+        end
+    endfunction
+
+    analog function real hyp21_self;
+        input a, b, c, x;
+        real a, b, c, x, value;
+        begin
+            if (abs(x) < 1) begin
+                value = hyp21_series(a,b,c,x);
+            end
+            if (abs(x) > 1) begin
+                value = pow(-x,-a)*(sgamma(c)*sgamma(b-a))/(sgamma(b)*sgamma(c-a))*hyp21_series(a,a-c+1,a-b+1,1/x);
+                value = value + pow(-x,-b)*(sgamma(c)*sgamma(a-b))/(sgamma(a)*sgamma(c-b))*hyp21_series(b-c+1,b,b-a+1,1/x);
+            end
+            if (abs(x) == 1) begin
+                value = pow(1-x,-a)*hyp21_series(a,c-b,c,x/(x-1));
+            end
+            hyp21_self = value;
+        end
+    endfunction
+
+    analog function real nfree;
+        input g2D, ET, E1, E2, E3, phi, Ef;
+        real g2D, ET, E1, E2, E3, phi, Ef;
+        begin
+            nfree = g2D*ET*(ln(1+exp(-(E1-phi-Ef)/(ET))) + ln(1+exp(-(E2-phi-Ef)/(ET))) + ln(1+exp(-(E3-phi-Ef)/(ET))));
+        end
+    endfunction
+
+    analog function real dnfree;
+        input g2D, ET, E1, E2, E3, phi, Ef;
+        real g2D, ET, E1, E2, E3, phi, Ef;
+        begin
+            dnfree = g2D* ( exp(-(E1-phi-Ef)/(ET))/(1+exp(-(E1-phi-Ef)/(ET))) + exp(-(E2-phi-Ef)/(ET))/(1+exp(-(E2-phi-Ef)/(ET))) + exp(-(E3-phi-Ef)/(ET))/(1+exp(-(E3-phi-Ef)/(ET))) );
+        end
+    endfunction
+
+    analog function real ntraps;
+        input Ntraps, Ttraps, T, ET, E1, phi, Ef;
+        real Ntraps, Ttraps, T, ET, E1, phi, Ef;
+        begin
+            ntraps = Ntraps * hyp21_self(1,T/Ttraps,1+T/Ttraps,-exp((E1-phi-Ef)/(ET)));
+        end
+    endfunction
+
+    analog function real dntraps;
+        input Ntraps, Ttraps, T, ET, E1, phi, Ef;
+        real Ntraps, Ttraps, T, ET, E1, phi, Ef;
+        begin
+            dntraps = (Ntraps/(ET))*exp((E1-phi-Ef)/(ET)) * hyp21_self(2,1+T/Ttraps,2+T/Ttraps,-exp((E1-phi-Ef)/(ET))/(ET*(Ttraps/T)*(1+T/Ttraps)));
+        end
+    endfunction
+
+    analog function real ndeep;
+        input Ndeep, Tdeep, T, ET, E1, phi, Ef;
+        real Ndeep, Tdeep, T, ET, E1, phi, Ef;
+        begin
+            ndeep = Ndeep * hyp21_self(1,T/Tdeep,1+T/Tdeep,-exp((E1-phi-Ef)/(ET)));
+        end
+    endfunction
+
+    analog function real dndeep;
+        input Ndeep, Tdeep, T, ET, E1, phi, Ef;
+        real Ndeep, Tdeep, T, ET, E1, phi, Ef;
+        begin
+            dndeep = (Ndeep/(ET))*exp((E1-phi-Ef)/(ET)) * hyp21_self(2,1+T/Tdeep,2+T/Tdeep,-exp((E1-phi-Ef)/(ET))/(ET*(Tdeep/T)*(1+T/Tdeep)));
+        end
+    endfunction
+
+    analog function real Ef_compute;
+        input Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3;
+        real Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3;
+        real z0, z, zprev, TOLERANCE, ALPHA, c, f, df;
+        begin
+            z0 = 0;
+            z = z0;
+            TOLERANCE = 1e-10;
+            ALPHA = 0.5;
+            zprev = z0 - 2*TOLERANCE;
+            c = 0;
+            while ( abs(z-zprev) > TOLERANCE && c < 200) begin
+                zprev = z;
+                f = (nfree(g2D, ET, E1, E2, E3, 0, zprev) + ntraps(Ntraps, Ttraps, T, ET, E1, 0, zprev) + ndeep(Ndeep, Tdeep, T, ET, E1, 0, zprev) - Nch)/Nch;
+                df = (dnfree(g2D, ET, E1, E2, E3, 0, zprev) + dntraps(Ntraps, Ttraps, T, ET, E1, 0, zprev) + dndeep(Ndeep, Tdeep, T, ET, E1, 0, zprev))/Nch;
+                z = zprev - ALPHA * f / df;
+                c = c + 1;
+            end
+            Ef_compute = z;
+        end
+    endfunction
+    
+    analog function real Id_evaluate;
+        input W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, Vds, Vgs, phiM, chiS, phiMS, Efermi, q, Cox;
+        real W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, Vds, Vgs, phiM, chiS, phiMS, Efermi, q, Cox;
+        real i, NN, zprev, z, z0, TOLERANCE, ALPHA, c, f, df, V, phi_fn, Id_fn, Id_fn_prev, Id_return;
+        begin
+            // Efermi = Ef_compute(Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3);
+            // phiMS = phiM - (chiS-Efermi);
+            
+            NN = 10000;
+            i = 0;
+
+            V = i*Vds/NN;
+            z0 = 0;
+            z = z0;
+            TOLERANCE = 1e-10;
+            ALPHA = 0.5;
+            zprev = z0 - 2*TOLERANCE;
+            c = 0;
+            while ( abs(z-zprev) > TOLERANCE && c < 200) begin
+                zprev = z;
+                f = Cox*(Vgs-phiMS-zprev) - q*(nfree(g2D, ET, E1, E2, E3, zprev-V, Efermi) + ntraps(Ntraps, Ttraps, T, ET, E1, zprev-V, Efermi) + ndeep(Ndeep, Tdeep, T, ET, E1, zprev-V, Efermi)-Nch);
+                df = -Cox - q*(dnfree(g2D, ET, E1, E2, E3, zprev-V, Efermi) + dntraps(Ntraps, Ttraps, T, ET, E1, zprev-V, Efermi) + dndeep(Ndeep, Tdeep, T, ET, E1, zprev-V, Efermi));
+                z = zprev - ALPHA * f / df;
+                c = c + 1;
+            end
+            phi_fn = z;
+            Id_fn = (W/L)*q*mu_band*nfree(g2D, ET, E1, E2, E3, phi_fn-V, Efermi);
+
+            Id_return = 0;
+            i = 1;
+            for (i = 1; i <= NN; i = i+1) begin
+                Id_fn_prev = Id_fn;
+                V = i*Vds/NN;
+                z0 = 0;
+                z = z0;
+                TOLERANCE = 1e-10;
+                ALPHA = 0.5;
+                zprev = z0 - 2*TOLERANCE;
+                c = 0;
+                while ( abs(z-zprev) > TOLERANCE && c < 200) begin
+                    zprev = z;
+                    f = Cox*(Vgs-phiMS-zprev) - q*(nfree(g2D, ET, E1, E2, E3, zprev-V, Efermi) + ntraps(Ntraps, Ttraps, T, ET, E1, zprev-V, Efermi) + ndeep(Ndeep, Tdeep, T, ET, E1, zprev-V, Efermi)-Nch);
+                    df = -Cox - q*(dnfree(g2D, ET, E1, E2, E3, zprev-V, Efermi) + dntraps(Ntraps, Ttraps, T, ET, E1, zprev-V, Efermi) + dndeep(Ndeep, Tdeep, T, ET, E1, zprev-V, Efermi));
+                    z = zprev - ALPHA * f / df;
+                    c = c + 1;
+                end
+                phi_fn = z;
+                Id_fn = (W/L)*q*mu_band*nfree(g2D, ET, E1, E2, E3, phi_fn-V, Efermi);
+                Id_return  = Id_return + (Vds/NN) * (Id_fn_prev + Id_fn)/2.0;
+            end
+            Id_evaluate = Id_return;
+        end
+    endfunction
+    
+    real Efermi, phiMS;
+    analog begin
+        Efermi = Ef_compute(Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3);
+        phiMS = phiM - (chiS-Efermi);
+        // without Rs & Rd
+        I(d,s) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(d,s), V(g,s), phiM, chiS, phiMS, Efermi, q, Cox);
+        
+        // with Rs & Rd
+        // I(di,si) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(di,si), V(g,si),  phiM, chiS, phiMS, Efermi, q, Cox); 
+        // I(d,di) <+ V(d,di)/Rd;
+        // I(s,si) <+ V(s,si)/Rs;
+    end
+endmodule
+
+// from previous versions
+
+// parameter real Efermi = 0.09612838; //calculated from python code
+// parameter real phiMS = phiM - (chiS-Efermi);
+// parameter real beta = 10;
+
+// analog function real phi_fn;
+//     input beta, V, Vg, phiMS, q, Nch, Cox, g2D, Efermi, E1, Ntraps;
+//     real phi_fn_L, phi_fn_H, beta, V, Vg, phiMS, q, Nch, Cox, g2D, Efermi, E1, Ntraps;
+//     begin
+//         phi_fn_L = Vg-phiMS+q*Nch/Cox;
+//         phi_fn_H = (Vg-phiMS-q*(g2D*(Efermi-E1-V)+Ntraps-Nch)/Cox)/(1+q*g2D/Cox);
+//         phi_fn = -ln(exp(-beta*phi_fn_L)+exp(-beta*phi_fn_H))/beta;
+//     end
+// endfunction
+
+// analog function real Id_return;
+//     input W, L, mu_band, beta, Vds, Vgs, phiMS, q, Nch, Cox, g2D, Efermi, ET, E1, Ntraps;
+//     real W, L, mu_band, beta, Vds, Vgs, phiMS, q, Nch, Cox, g2D, Efermi, ET, E1, Ntraps; 
+//     real VV, Id_h, Id_l, phil, phih, nfl, nfh, qty;
+//     real i, NN;
+//     begin
+//         Id_return = 0;
+//         NN = 10000;
+//         i = 0;
+//         for (i = 0; i < NN; i = i+1) begin
+//             VV = i*Vds/NN;
+//             phil = phi_fn(beta, VV, Vgs, phiMS, q, Nch, Cox, g2D, Efermi, E1, Ntraps);
+//             nfl = nfree(g2D, ET, E1, phil-VV, Efermi);
+//             Id_l = (W/L)*q*mu_band*nfl;
+//             VV = VV + Vds/NN;
+//             phih = phi_fn(beta, VV, Vgs, phiMS, q, Nch, Cox, g2D, Efermi, E1, Ntraps);
+//             nfh = nfree(g2D, ET, E1, phih-VV, Efermi);
+//             Id_h = (W/L)*q*mu_band*nfh;
+//             qty = (Vds/NN)*(Id_l + Id_h)/2;
+//             Id_return = Id_return + qty;
+//         end
+//     end
+//     endfunction
