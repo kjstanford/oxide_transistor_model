@@ -1,7 +1,7 @@
 `include "discipline.h"
 `include "constants.h"
 
-module ITO_TFT_compact_v2(d, g, s);
+module ITO_TFT_compact_v1(d, g, s);
     inout d, g, s;
     electrical d, g, s, di, si;
    
