@@ -18,7 +18,7 @@ Vs s gnd 0
 * Measurements
 ***********************************************************************
 * test xnFET Ids vs. Vgs
-.DC       Vg  START='supply_min'     STOP='supply_max'   STEP='0.01'
+.DC       Vg  START='supply_min'     STOP='supply_max'   STEP='0.02'
 
 .print dc idd=par('i(xnfet.d)')
 

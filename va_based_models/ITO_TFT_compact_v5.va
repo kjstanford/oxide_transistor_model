@@ -1,5 +1,6 @@
 // based on ITO_analytical_model_ver2.py (Dual Exponential Trap Distribution & self written NR solver);
 // Boole's rule for integration
+// Ndeep + Ntraps is constant i.e. Ntot
 
 `include "discipline.h"
 `include "constants.h"
@@ -19,13 +20,15 @@ module ITO_TFT_compact_v5(d, g, s);
     parameter real h = hred*2*pi;
 
     // parameters
-    parameter real mu_band = 33.5*1e-4;
-    parameter real Ntraps = 5.5e16;
-    parameter real Ttraps = 400;
-    parameter real Ndeep = 5.5e16;
-    parameter real Tdeep = 1000;
-    parameter real Nch = 1.0e17;
-    parameter real T = 300;
+    parameter real frac = 1;
+    parameter real Ntot = 6.75e16;
+    parameter real mu_band = 39.5*1e-4;
+    parameter real Ntraps = frac*Ntot;
+    parameter real Ttraps = 500;
+    parameter real Ndeep = (1-frac)*Ntot;
+    parameter real Tdeep = 40000;
+    parameter real Nch = 1.34e17;
+    parameter real T = 273.13+27;
     parameter real tITO = 4.5e-9;
     parameter real tDE = 5.3e-9;
     parameter real me = 0.3*mo;
@@ -33,10 +36,10 @@ module ITO_TFT_compact_v5(d, g, s);
     parameter real kITO = 9;
     parameter real phiM = 5.2;
     parameter real chiS = 4.3;
-    parameter real L = 1;
-    parameter real W = 1;
-    parameter real Rs = 1;
-    parameter real Rd = 1;
+    parameter real L = 1.5;
+    parameter real W = 20;
+    parameter real Rs = 100;
+    parameter real Rd = 100;
     parameter real beta = 10;
     parameter real NN = 40; // should be a multiple of 4
 
@@ -275,12 +278,12 @@ module ITO_TFT_compact_v5(d, g, s);
         Efermi = Ef_compute(Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3);
         phiMS = phiM - (chiS-Efermi);
         // without Rs & Rd
-        I(d,s) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(d,s), V(g,s), phiM, chiS, phiMS, Efermi, q, Cox, beta, NN);
+        // I(d,s) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(d,s), V(g,s), phiM, chiS, phiMS, Efermi, q, Cox, beta, NN);
         
         // with Rs & Rd
-        // I(di,si) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(di,si), V(g,si),  phiM, chiS, phiMS, Efermi, q, Cox, beta, NN); 
-        // I(d,di) <+ V(d,di)/Rd;
-        // I(s,si) <+ V(s,si)/Rs;
+        I(di,si) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(di,si), V(g,si),  phiM, chiS, phiMS, Efermi, q, Cox, beta, NN); 
+        I(d,di) <+ V(d,di)/Rd;
+        I(s,si) <+ V(s,si)/Rs;
     end
 endmodule
 
