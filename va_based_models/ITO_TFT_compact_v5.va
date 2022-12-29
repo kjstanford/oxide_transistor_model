@@ -37,6 +37,8 @@ module ITO_TFT_compact_v5(d, g, s);
     parameter real W = 1;
     parameter real Rs = 1;
     parameter real Rd = 1;
+    parameter real beta = 10;
+    parameter real NN = 40; // should be a multiple of 4
 
     // other values
     parameter real Cox = epso*kDE/tDE;
@@ -187,8 +189,6 @@ module ITO_TFT_compact_v5(d, g, s);
         end
     endfunction
 
-    parameter real beta = 10;
-
     analog function real phi_fn_guess;
         input beta, V, Vg, phiMS, q, Nch, Cox, g2D, Efermi, E1, Ntraps;
         real phi_fn_L, phi_fn_H, beta, V, Vg, phiMS, q, Nch, Cox, g2D, Efermi, E1, Ntraps;
@@ -200,16 +200,15 @@ module ITO_TFT_compact_v5(d, g, s);
     endfunction
     
     analog function real Id_evaluate;
-        input W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, Vds, Vgs, phiM, chiS, phiMS, Efermi, q, Cox;
-        real W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, Vds, Vgs, phiM, chiS, phiMS, Efermi, q, Cox;
-        real i, k, NN, zprev, z, z0, TOLERANCE, ALPHA, c, f, df, V, phi_fn, Id_fn_prev, Id_return;
+        input W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, Vds, Vgs, phiM, chiS, phiMS, Efermi, q, Cox, beta, NN;
+        real W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, Vds, Vgs, phiM, chiS, phiMS, Efermi, q, Cox, beta, NN;
+        real i, k, zprev, z, z0, TOLERANCE, ALPHA, c, f, df, V, phi_fn, Id_fn_prev, Id_return;
         integer j;
         real Id_fn[1:5];
         begin
             // Efermi = Ef_compute(Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3);
             // phiMS = phiM - (chiS-Efermi);
             
-            NN = 40; // must be a multiple of 4
             i = 0;
 
             V = i*Vds/NN;
@@ -276,10 +275,10 @@ module ITO_TFT_compact_v5(d, g, s);
         Efermi = Ef_compute(Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3);
         phiMS = phiM - (chiS-Efermi);
         // without Rs & Rd
-        I(d,s) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(d,s), V(g,s), phiM, chiS, phiMS, Efermi, q, Cox);
+        I(d,s) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(d,s), V(g,s), phiM, chiS, phiMS, Efermi, q, Cox, beta, NN);
         
         // with Rs & Rd
-        // I(di,si) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(di,si), V(g,si),  phiM, chiS, phiMS, Efermi, q, Cox); 
+        // I(di,si) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(di,si), V(g,si),  phiM, chiS, phiMS, Efermi, q, Cox, beta, NN); 
         // I(d,di) <+ V(d,di)/Rd;
         // I(s,si) <+ V(s,si)/Rs;
     end
