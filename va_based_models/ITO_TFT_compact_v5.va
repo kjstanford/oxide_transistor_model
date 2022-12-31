@@ -20,6 +20,7 @@ module ITO_TFT_compact_v5(d, g, s);
     parameter real h = hred*2*pi;
 
     // parameters
+    parameter real mode = 0; // 0 when without Rs/Rd, 1 when with Rs/Rd 
     parameter real frac = 1;
     parameter real Ntot = 6.75e16;
     parameter real mu_band = 39.5*1e-4;
@@ -278,12 +279,16 @@ module ITO_TFT_compact_v5(d, g, s);
         Efermi = Ef_compute(Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3);
         phiMS = phiM - (chiS-Efermi);
         // without Rs & Rd
-        // I(d,s) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(d,s), V(g,s), phiM, chiS, phiMS, Efermi, q, Cox, beta, NN);
-        
+        if (mode == 0) begin
+            I(d,s) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(d,s), V(g,s), phiM, chiS, phiMS, Efermi, q, Cox, beta, NN);
+        end
+
         // with Rs & Rd
-        I(di,si) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(di,si), V(g,si),  phiM, chiS, phiMS, Efermi, q, Cox, beta, NN); 
-        I(d,di) <+ V(d,di)/Rd;
-        I(s,si) <+ V(s,si)/Rs;
+        if (mode == 1) begin
+            I(di,si) <+ Id_evaluate(W, L, mu_band, Ntraps, Ttraps, Ndeep, Tdeep, Nch, g2D, ET, T, E1, E2, E3, V(di,si), V(g,si),  phiM, chiS, phiMS, Efermi, q, Cox, beta, NN); 
+            I(d,di) <+ V(d,di)/Rd;
+            I(s,si) <+ V(s,si)/Rs;
+        end
     end
 endmodule
 
