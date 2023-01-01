@@ -8,7 +8,7 @@ from numpy import pi, log, log10, exp
 from cascade_csv_reader_full import cascade_csv_reader, lin_plot, logx_plot, logy_plot
 import fileinput as fi
   
-lines = list(fi.input(files = 'evaluate_12_30_v2.lis'))
+lines = list(fi.input(files = 'evaluate_12_31_v1.lis'))
 
 line_num = 0
 first_word = lines[line_num].split()
@@ -138,12 +138,13 @@ ax_SS = ax_SS_exp + ax_SS_sim + ax_SS_hspice
 
 c = [yy for xx in ['solid', 'dotted', 'dashed'] for yy in ['r', 'b', 'g', 'k', 'm']] 
 s = [xx for xx in ['solid', 'dotted', 'dashed'] for yy in ['r', 'b', 'g', 'k', 'm']]
+mask = [yy for xx in range(3) for yy in [False, False, False, False, True]]
 print(c, s)
-lin_plot(x=ax_Vg, y=ax_Id, c=c, s=s)
-logy_plot(x=ax_Vg, y=ax_Id, c=c, s=s)
-lin_plot(x=ax_Vg, y=ax_mu, c=c, s=s)
-# logy_plot(x=ax_Vg, y=ax_mu, c=c, s=s)
-logx_plot(x=ax_Id, y=ax_SS, c=c, s=s,\
+lin_plot(x=ax_Vg, y=ax_Id, c=c, s=s, mask=mask)
+logy_plot(x=ax_Vg, y=ax_Id, c=c, s=s, mask=mask)
+lin_plot(x=ax_Vg, y=ax_mu, c=c, s=s, mask=mask)
+logy_plot(x=ax_Vg, y=ax_mu, c=c, s=s, mask=mask)
+logx_plot(x=ax_Id, y=ax_SS, c=c, s=s, mask=mask,\
     xlim=(W*1e-13, W*1e-7), ylim=(45, 200))
 
 # print(ax_Id_sim[0])
