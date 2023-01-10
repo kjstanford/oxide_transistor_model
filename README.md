@@ -1,4 +1,4 @@
-# oxide_transistor_model
+# oxide_transistor_model (Autumn 2022-23)
 Complete repository of oxide transistor models
 # Errata
 * the metal-semiconductor workfunction difference is not correct (En(1) missing in the expression)
